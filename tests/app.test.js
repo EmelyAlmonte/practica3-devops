@@ -39,4 +39,32 @@ describe('API de tareas', () => {
     expect(r.body.tareas).toBe(1);
     expect(r.body.solicitudes).toBeGreaterThanOrEqual(2);
   });
+
+  // ---- Pruebas nuevas (Práctica 3) ----
+
+  test('DELETE /api/tareas/:id borra la tarea', async () => {
+    await request(app).post('/api/tareas').send({ titulo: 'Para borrar' });
+    const r = await request(app).delete('/api/tareas/1');
+    expect(r.status).toBe(204);
+    const lista = await request(app).get('/api/tareas');
+    expect(lista.body).toHaveLength(0);
+  });
+
+  test('DELETE de una tarea inexistente devuelve 404', async () => {
+    const r = await request(app).delete('/api/tareas/99');
+    expect(r.status).toBe(404);
+  });
+
+  test('POST con título de más de 100 caracteres devuelve 400', async () => {
+    const r = await request(app).post('/api/tareas').send({ titulo: 'a'.repeat(101) });
+    expect(r.status).toBe(400);
+  });
+
+  test('los ids no se repiten después de borrar', async () => {
+    await request(app).post('/api/tareas').send({ titulo: 'Uno' });
+    await request(app).post('/api/tareas').send({ titulo: 'Dos' });
+    await request(app).delete('/api/tareas/1');
+    const r = await request(app).post('/api/tareas').send({ titulo: 'Tres' });
+    expect(r.body.id).toBe(3);
+  });
 });
